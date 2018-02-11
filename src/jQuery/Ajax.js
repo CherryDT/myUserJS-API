@@ -36,7 +36,7 @@ jMod.jQueryExtensions.CrossOriginSupportTransportFn = function(_jQueryObj, dataT
 							method: options.type || "GET",
 							url: options.url,
 							// Shallow clone of data from both options
-							data: extend({}, options.data || {}, originalOptions.data || {}),
+							data: typeof mergedOptions.data == 'string' ? mergedOptions.data : extend({}, options.data || {}, originalOptions.data || {}),
 							headers: headers,
 							onload: function(response){
 								// Done response

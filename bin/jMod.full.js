@@ -5,7 +5,7 @@
 // @homepage         http://myuserjs.org/
 // @license          GNU GPL version 3; http://www.gnu.org/licenses/gpl-3.0.txt
 // @exclude          *
-// @version          0.0.20
+// @version          0.0.20.1
 // @grant            unsafeWindow
 // @grant            GM_info
 // @grant            GM_log
@@ -26,7 +26,7 @@
 /*
  * @overview [API for interacting with myUserJS.org]{@link jMod}
  * @author jgjake2
- * @version 0.0.20
+ * @version 0.0.20.1
  * @see {@link jMod}
  * @todo Add cookie storage
  * @todo Finish documentation
@@ -194,7 +194,7 @@
  * @global
  * @namespace jMod
  * @author jgjake2
- * @version 0.0.20
+ * @version 0.0.20.1
  * @tutorial jMod-tutorial
  */
 +function($, unsafeWindow, window, factory){
@@ -374,7 +374,7 @@
 		jModReady = -1,
 		_css = "@import url(//fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,300,400,700);\n"
 		+"@import url(http://code.jmod.info/fonts/sansation.css);\n",
-		defaultjModCSSURL = false ? "@import url(//test2.myuserjs.org/API/0.0.20/jMod.css);\n" : "@import url(http://code.jmod.info/0.0.20/jMod.css);\n",
+		defaultjModCSSURL = true ? "@import url(//test2.myuserjs.org/API/0.0.20.1/jMod.css);\n" : "@import url(http://code.jmod.info/0.0.20.1/jMod.css);\n",
 		CurrentRunningScript = {
 			id: 'jMod',
 			config: {},
@@ -420,7 +420,7 @@
 	 * @memberOf! jMod
 	 * @type {string}
 	 */
-	DefineLockedProp('version', '0.0.20');
+	DefineLockedProp('version', '0.0.20.1');
 	
 	/**
 	 * Date of build
@@ -428,7 +428,7 @@
 	 * @memberOf! jMod
 	 * @type {string}
 	 */
-	DefineLockedProp('build_time', '1494089011000');
+	DefineLockedProp('build_time', '1518375836000');
 	
 	/**
 	 * Current build type (beta|release)
@@ -436,7 +436,7 @@
 	 * @memberOf! jMod
 	 * @type {string}
 	 */
-	DefineLockedProp('build_type', 'release');
+	DefineLockedProp('build_type', 'beta');
 	
 	/**
 	 * Is debug mode enabled
@@ -444,7 +444,7 @@
 	 * @memberOf! jMod
 	 * @type {boolean}
 	 */
-	DefineLockedProp('_debug', false);
+	DefineLockedProp('_debug', true);
 	
 	Object.defineProperty(jMod, 'debug', {
 		get: function(){
@@ -2328,10 +2328,10 @@ test_assign();
 		'jQueryExtensions': {
 			'CrossOrigin': true
 		},
-		'debug': false
+		'debug': true
 	});
 	/*
-	if(false){
+	if(true){
 		try{
 			if(['firefox', 'waterfox'].indexOf(jMod.Config.browser.name.toLowerCase()) == -1){
 				jMod.Config.API.log.GM_log = false;
@@ -5177,154 +5177,7 @@ jMod.API.contentEval = function(source) {
 	/***********************************
 	 ** Cookie
 	 **********************************/
-// Based on:
-// https://github.com/carhartl/jquery-cookie
-+(function(){
 
-	function parseCookieValue(s) {
-		if (s.indexOf('"') === 0) {
-			// This is a quoted cookie as according to RFC2068, unescape...
-			s = s.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-		}
-		try {
-			// Replace server-side written pluses with spaces.
-			// If we can't decode the cookie, ignore it, it's unusable.
-			// If we can't parse the cookie, ignore it, it's unusable.
-			s = decodeURIComponent(s.replace(/\+/g, ' '));
-			
-			return jMod.API.Cookie.defaults.JSON ? JSON.parse(s) : s;
-		} catch(e) {}
-	}
-	
-	function read(s, converter) {
-		var value = parseCookieValue(s);
-		return "function"==typeof converter ? converter(value) : value;
-	}
-
-	var isDate = function(date) {
-		return ( (new Date(date) !== "Invalid Date" && !isNaN(new Date(date)) ));
-	}
-	
-	jMod.API.Cookie = function(key, value, options){
-		var i, parts, name, cookie, cookies, tmp,
-			doc = jMod.Element.document,
-			result = key ? undefined : {},
-			defaults = jMod.API.Cookie.defaults;
-		
-		if(!doc){
-			jModLogWarning('jMod.API.Cookie', 'No document available');
-			return;
-		}
-		
-		if (arguments.length > 1 && "function"!=typeof value) {
-			options = jMod.extend({}, defaults, options);
-			//switch(typeof options.expires){
-			switch(jMod.RealTypeOf(options.expires)){
-				case "number":
-					tmp = options.expires;
-					i = options.expires = new Date();
-					i.setTime(+i + tmp * 864e+5);
-					break;
-				case "string":
-					//if(isDate(options.expires)){
-						try{
-							options.expires = Date.parse(options.expires);
-						} catch(e) {
-							jModLogError(e, 'jMod.API.Cookie', 'Invalid Exp Date');
-							return;
-						}
-					//} else {
-						//options.expires = defaults.expires;
-					//}
-					
-					break;
-				case "invaliddate":
-					jModLogError(e, 'jMod.API.Cookie', 'Invalid Exp Date');
-					return;
-				case "date":
-					// Do Nothing
-					break;
-				default:
-					options.expires = defaults.expires;
-					break;
-			}
-			
-			if(defaults.JSON){
-				try{
-					cookie = encodeURIComponent(JSON.stringify(value));
-				}catch(e){
-					cookie = undefined;
-				}
-			}
-			
-			if(_undefined==typeof cookie)
-				cookie = encodeURIComponent(String(value));
-			
-			return (doc.cookie = [
-				encodeURIComponent(key), '=', cookie,
-				options.expires ? '; expires=' + options.expires.toUTCString() : '', // use expires attribute, max-age is not supported by IE
-				options.path ? '; path=' + options.path : '',
-				options.domain ? '; domain=' + options.domain : '',
-				options.secure ? '; secure' : ''
-			].join(''));
-		}
-		
-		cookies = doc.cookie ? doc.cookie.split('; ') : [];
-		
-		for(i = 0, l = cookies.length; i < l; i++) {
-			parts = cookies[i].split('=');
-			name = decodeURIComponent(parts.shift());
-			cookie = parts.join('=');
-			if(key && key === name) {
-				// If second argument (value) is a function it's a converter...
-				result = read(cookie, value);
-				break;
-			}
-			// Prevent storing a cookie that we couldn't decode.
-			//if(!key && (cookie = read(cookie)) !== undefined) {
-			if(!key){
-				var tmp = read(cookie) || cookie;
-				if(tmp)
-					result[name] = tmp;
-			}
-		}
-		return result;
-	};
-	
-	
-	// move defaults to jMod's config file
-	jMod.API.Cookie.defaults = {
-		expires: Date.parse('Jan 1, 2020'),
-		JSON: true
-	};
-	
-	jMod.API.Cookie.remove = function (key, options) {
-		if (jMod.API.Cookie === undefined) {
-			return false;
-		}
-		// Must not alter options, thus extending a fresh object...
-		jMod.API.Cookie(key, '', jMod.extend({}, options || {}, { expires: -1 }));
-		return !jMod.API.Cookie(key);
-	};
-
-})();
-/*
-setTimeout(function(){
-	console.log('Cookie test');
-	var tmpCookies = jMod.API.Cookie();
-	console.log('Start Cookies', tmpCookies);
-	
-	jMod.API.Cookie('TestCookie1', 'Cookie Value 1');
-	
-	jMod.API.Cookie('TestCookie2', 'Cookie Value 2');
-	
-	jMod.API.Cookie('TestCookie3', {foo : 'bar', taco: 'bell'});
-	
-	tmpCookies = jMod.API.Cookie();
-	console.log('End Cookies', tmpCookies);
-	console.log('End Cookie test');
-}, 2000);
-*/
 	
 	/***********************************
 	 ** Storage
@@ -6133,7 +5986,7 @@ jMod.jQueryExtensions.CrossOriginSupportTransportFn = function(_jQueryObj, dataT
 							method: options.type || "GET",
 							url: options.url,
 							// Shallow clone of data from both options
-							data: extend({}, options.data || {}, originalOptions.data || {}),
+							data: typeof mergedOptions.data == 'string' ? mergedOptions.data : extend({}, options.data || {}, originalOptions.data || {}),
 							headers: headers,
 							onload: function(response){
 								// Done response
